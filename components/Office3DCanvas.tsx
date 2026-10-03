@@ -60,7 +60,7 @@ function Workstation3D({ member }: { member: SquadMember }) {
     const time = state.clock.getElapsedTime();
 
     if (isWorking) {
-      // 1. ACTIVE WORKING: Hands over keyboard typing (keyboard is at z = -0.15)
+      // 1. ACTIVE WORKING: Hands over keyboard typing
       const typingSpeed = 16;
       if (leftHandRef.current && rightHandRef.current) {
         leftHandRef.current.position.y = 0.15 + Math.sin(time * typingSpeed) * 0.025;
@@ -94,7 +94,7 @@ function Workstation3D({ member }: { member: SquadMember }) {
       if (coffeeArmRef.current) {
         const sipCycle = Math.sin(time * 1.8);
         if (sipCycle > 0.3) {
-          // Bring cup near the face (face is at -0.42, +y)
+          // Bring cup near the face
           const lift = (sipCycle - 0.3) * 0.45;
           coffeeArmRef.current.position.set(0.18, 0.82 + lift * 0.2, -0.32);
           coffeeArmRef.current.rotation.set(-0.35, 0.2, -0.2);
@@ -142,37 +142,32 @@ function Workstation3D({ member }: { member: SquadMember }) {
         <meshStandardMaterial color="#64748b" metalness={0.8} />
       </mesh>
 
-      {/* 2. Sleek 3D Laptop Facing Character 
-             Chair & Character at z = -0.42 looking forward towards +z.
-             Laptop Base is near user at z = -0.18.
-             Laptop Screen Hinge at z = 0.02, Screen stands up and tilts slightly back (+z),
-             with Display facing the character (-z direction).
-      */}
+      {/* 2. Sleek 3D Laptop Facing Character */}
       <group position={[0, 0.49, -0.08]}>
-        {/* Laptop Base & Keyboard (Closer to user at z = -0.1) */}
+        {/* Laptop Base & Keyboard */}
         <mesh position={[0, 0.01, -0.1]}>
           <boxGeometry args={[0.44, 0.015, 0.26]} />
           <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.2} />
         </mesh>
-        {/* Trackpad (Closest to user edge at z = -0.18) */}
+        {/* Trackpad */}
         <mesh position={[0, 0.018, -0.18]}>
           <boxGeometry args={[0.13, 0.002, 0.065]} />
           <meshStandardMaterial color="#1e293b" />
         </mesh>
-        {/* Keyboard keys area (at z = -0.09) */}
+        {/* Keyboard keys area */}
         <mesh position={[0, 0.018, -0.09]}>
           <boxGeometry args={[0.38, 0.002, 0.10]} />
           <meshStandardMaterial color="#0f172a" />
         </mesh>
 
-        {/* Laptop Screen (Hinge at z = 0.03, Screen tilts back towards +z by 20 deg) */}
+        {/* Laptop Screen (Hinge at z = 0.03, Screen tilts back towards +z) */}
         <group position={[0, 0.02, 0.03]} rotation={[0.32, 0, 0]}>
-          {/* Outer Lid (Back of laptop, seen from front of desk / +z) */}
+          {/* Outer Lid */}
           <mesh position={[0, 0.14, 0.006]}>
             <boxGeometry args={[0.44, 0.28, 0.012]} />
             <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.3} />
           </mesh>
-          {/* Display Matrix (Screen face turned towards character / -z) */}
+          {/* Display Matrix facing character */}
           <mesh ref={laptopScreenRef} position={[0, 0.14, -0.001]} rotation={[0, Math.PI, 0]}>
             <planeGeometry args={[0.41, 0.25]} />
             <meshBasicMaterial color={isWorking ? roleScreenGlow : '#0f172a'} />
@@ -190,22 +185,18 @@ function Workstation3D({ member }: { member: SquadMember }) {
 
       {/* 3. Steaming Coffee Mug (Interactive Coffee Break / Sipping Animation) */}
       <group ref={coffeeArmRef} position={[0.48, 0.49, 0.15]}>
-        {/* Coffee Mug Ceramic Body */}
         <mesh position={[0, 0.06, 0]}>
           <cylinderGeometry args={[0.05, 0.042, 0.1, 16]} />
           <meshStandardMaterial color={isIdle ? '#f59e0b' : '#94a3b8'} roughness={0.2} />
         </mesh>
-        {/* Hot Black Coffee inside */}
         <mesh position={[0, 0.105, 0]}>
           <cylinderGeometry args={[0.045, 0.045, 0.005, 16]} />
           <meshStandardMaterial color="#3f271d" roughness={0.1} />
         </mesh>
-        {/* Handle */}
         <mesh position={[0.06, 0.06, 0]} rotation={[0, 0, Math.PI / 2]}>
           <torusGeometry args={[0.026, 0.008, 8, 16]} />
           <meshStandardMaterial color="#cbd5e1" />
         </mesh>
-        {/* Gentle Steam Plume when Idle */}
         {isIdle && (
           <group position={[0, 0.16, 0]}>
             <mesh position={[0, 0, 0]}>
@@ -234,147 +225,157 @@ function Workstation3D({ member }: { member: SquadMember }) {
         <meshStandardMaterial color="#475569" metalness={0.9} />
       </mesh>
 
-      {/* 5. Expressive 3D Human Character Sitting on Chair Facing +Z */}
+      {/* 5. Expressive 3D Human Character with Prominent Big Eyes, Pupils, Brows, Smile */}
       <group position={[0, 0.55, -0.42]}>
-        {/* Torso with Customized Role Outfit */}
+        {/* Torso */}
         <mesh position={[0, 0.25, 0]} rotation={[isWorking ? 0.12 : -0.05, 0, 0]}>
           <boxGeometry args={[0.42, 0.45, 0.28]} />
           <meshStandardMaterial color={suitColor} roughness={0.6} />
         </mesh>
 
-        {/* Head & Human Face (Facing towards +Z, looking at desk and laptop) */}
+        {/* Head & Human Face */}
         <group position={[0, 0.62, isWorking ? 0.05 : 0]}>
-          {/* Head sphere */}
+          {/* Head Sphere */}
           <mesh>
-            <sphereGeometry args={[0.18, 24, 24]} />
-            <meshStandardMaterial color="#fed7aa" roughness={0.4} />
+            <sphereGeometry args={[0.20, 24, 24]} />
+            <meshStandardMaterial color="#fed7aa" roughness={0.35} />
           </mesh>
 
-          {/* REALISTIC HUMAN EYES (Positioned at +Z front of face) */}
+          {/* LARGE ANIME/STYLIZED EYES (Z = +0.19, clearly protruding and visible) */}
           {/* Left Eye */}
-          <group position={[-0.06, 0.03, 0.165]}>
-            {/* Sclera (White eye ball) */}
+          <group position={[-0.07, 0.04, 0.19]}>
+            {/* Sclera (White base) */}
             <mesh>
-              <sphereGeometry args={[0.034, 16, 16]} />
+              <sphereGeometry args={[0.048, 16, 16]} />
               <meshBasicMaterial color="#ffffff" />
             </mesh>
-            {/* Dark Iris/Pupil */}
-            <mesh position={[0, 0, 0.024]}>
-              <sphereGeometry args={[0.018, 14, 14]} />
+            {/* Iris (Colored circle) */}
+            <mesh position={[0, 0, 0.032]}>
+              <sphereGeometry args={[0.03, 14, 14]} />
               <meshBasicMaterial color="#0f172a" />
             </mesh>
-            {/* White Reflection Sparkle */}
-            <mesh position={[0.007, 0.007, 0.036]}>
+            {/* Cute Sparkle 1 */}
+            <mesh position={[0.012, 0.012, 0.05]}>
+              <sphereGeometry args={[0.012, 8, 8]} />
+              <meshBasicMaterial color="#ffffff" />
+            </mesh>
+            {/* Cute Sparkle 2 */}
+            <mesh position={[-0.01, -0.01, 0.05]}>
               <sphereGeometry args={[0.006, 8, 8]} />
               <meshBasicMaterial color="#ffffff" />
             </mesh>
-            {/* Eyebrow */}
-            <mesh position={[0, 0.042, 0.016]} rotation={[0, 0, -0.08]}>
-              <boxGeometry args={[0.065, 0.014, 0.02]} />
-              <meshBasicMaterial color="#334155" />
+            {/* Dark Eyebrow */}
+            <mesh position={[0, 0.065, 0.01]} rotation={[0, 0, -0.1]}>
+              <boxGeometry args={[0.08, 0.02, 0.025]} />
+              <meshBasicMaterial color="#1e293b" />
             </mesh>
           </group>
 
           {/* Right Eye */}
-          <group position={[0.06, 0.03, 0.165]}>
-            {/* Sclera (White eye ball) */}
+          <group position={[0.07, 0.04, 0.19]}>
+            {/* Sclera (White base) */}
             <mesh>
-              <sphereGeometry args={[0.034, 16, 16]} />
+              <sphereGeometry args={[0.048, 16, 16]} />
               <meshBasicMaterial color="#ffffff" />
             </mesh>
-            {/* Dark Iris/Pupil */}
-            <mesh position={[0, 0, 0.024]}>
-              <sphereGeometry args={[0.018, 14, 14]} />
+            {/* Iris (Colored circle) */}
+            <mesh position={[0, 0, 0.032]}>
+              <sphereGeometry args={[0.03, 14, 14]} />
               <meshBasicMaterial color="#0f172a" />
             </mesh>
-            {/* White Reflection Sparkle */}
-            <mesh position={[0.007, 0.007, 0.036]}>
+            {/* Cute Sparkle 1 */}
+            <mesh position={[0.012, 0.012, 0.05]}>
+              <sphereGeometry args={[0.012, 8, 8]} />
+              <meshBasicMaterial color="#ffffff" />
+            </mesh>
+            {/* Cute Sparkle 2 */}
+            <mesh position={[-0.01, -0.01, 0.05]}>
               <sphereGeometry args={[0.006, 8, 8]} />
               <meshBasicMaterial color="#ffffff" />
             </mesh>
-            {/* Eyebrow */}
-            <mesh position={[0, 0.042, 0.016]} rotation={[0, 0, 0.08]}>
-              <boxGeometry args={[0.065, 0.014, 0.02]} />
-              <meshBasicMaterial color="#334155" />
+            {/* Dark Eyebrow */}
+            <mesh position={[0, 0.065, 0.01]} rotation={[0, 0, 0.1]}>
+              <boxGeometry args={[0.08, 0.02, 0.025]} />
+              <meshBasicMaterial color="#1e293b" />
             </mesh>
           </group>
 
-          {/* Cute Human Nose */}
-          <mesh position={[0, -0.01, 0.185]} rotation={[Math.PI / 2, 0, 0]}>
-            <coneGeometry args={[0.02, 0.04, 10]} />
-            <meshStandardMaterial color="#fca5a5" roughness={0.5} />
+          {/* Cute Nose */}
+          <mesh position={[0, -0.02, 0.21]} rotation={[Math.PI / 2, 0, 0]}>
+            <coneGeometry args={[0.025, 0.045, 10]} />
+            <meshStandardMaterial color="#fca5a5" roughness={0.4} />
           </mesh>
 
-          {/* Expressive Friendly Smile */}
-          <mesh position={[0, -0.065, 0.17]} rotation={[0, 0, 0]}>
-            <torusGeometry args={[0.035, 0.008, 8, 16, Math.PI * 0.7]} />
-            <meshBasicMaterial color="#be185d" />
+          {/* Cheerful Mouth / Smile */}
+          <mesh position={[0, -0.08, 0.19]} rotation={[0, 0, 0]}>
+            <torusGeometry args={[0.045, 0.01, 8, 16, Math.PI * 0.75]} />
+            <meshBasicMaterial color="#e11d48" />
           </mesh>
 
-          {/* Cheerful Pink Blush on Cheeks */}
-          <mesh position={[-0.11, -0.02, 0.145]}>
-            <sphereGeometry args={[0.032, 10, 10]} />
-            <meshBasicMaterial color="#f472b6" transparent opacity={0.45} />
+          {/* Pink Cheeks Blush */}
+          <mesh position={[-0.12, -0.03, 0.165]}>
+            <sphereGeometry args={[0.04, 10, 10]} />
+            <meshBasicMaterial color="#f472b6" transparent opacity={0.5} />
           </mesh>
-          <mesh position={[0.11, -0.02, 0.145]}>
-            <sphereGeometry args={[0.032, 10, 10]} />
-            <meshBasicMaterial color="#f472b6" transparent opacity={0.45} />
+          <mesh position={[0.12, -0.03, 0.165]}>
+            <sphereGeometry args={[0.04, 10, 10]} />
+            <meshBasicMaterial color="#f472b6" transparent opacity={0.5} />
           </mesh>
 
           {/* Hair & Accessories */}
           {member.role === 'qa' ? (
-            // QA Headset with large audio cups
-            <group position={[0, 0.02, 0]}>
+            // QA Headset
+            <group position={[0, 0.04, 0]}>
               <mesh>
-                <torusGeometry args={[0.20, 0.032, 10, 24, Math.PI]} />
-                <meshStandardMaterial color="#c084fc" metalness={0.6} />
+                <torusGeometry args={[0.22, 0.035, 10, 24, Math.PI]} />
+                <meshStandardMaterial color="#c084fc" metalness={0.7} />
               </mesh>
               {/* Ear cushions */}
-              <mesh position={[-0.19, 0, 0]}>
-                <sphereGeometry args={[0.055, 14, 14]} />
+              <mesh position={[-0.21, 0, 0]}>
+                <sphereGeometry args={[0.065, 14, 14]} />
                 <meshStandardMaterial color="#7c3aed" roughness={0.3} />
               </mesh>
-              <mesh position={[0.19, 0, 0]}>
-                <sphereGeometry args={[0.055, 14, 14]} />
+              <mesh position={[0.21, 0, 0]}>
+                <sphereGeometry args={[0.065, 14, 14]} />
                 <meshStandardMaterial color="#7c3aed" roughness={0.3} />
               </mesh>
-              {/* Short dark hair */}
-              <mesh position={[0, 0.12, -0.02]}>
-                <sphereGeometry args={[0.17, 16, 16]} />
+              {/* Hair */}
+              <mesh position={[0, 0.13, -0.02]}>
+                <sphereGeometry args={[0.19, 16, 16]} />
                 <meshStandardMaterial color="#1e293b" />
               </mesh>
             </group>
           ) : member.role === 'frontend' ? (
-            // Frontend Modern Magenta Bob Hair & Blue Spectacles
-            <group position={[0, 0.05, 0]}>
-              <mesh position={[0, 0.08, -0.02]}>
-                <sphereGeometry args={[0.19, 18, 18]} />
-                <meshStandardMaterial color="#be185d" roughness={0.5} />
+            // Frontend Stylish Hair & Glasses
+            <group position={[0, 0.06, 0]}>
+              <mesh position={[0, 0.1, -0.02]}>
+                <sphereGeometry args={[0.21, 18, 18]} />
+                <meshStandardMaterial color="#be185d" roughness={0.4} />
               </mesh>
-              {/* Stylish Glasses Frames */}
-              <mesh position={[0, -0.02, 0.19]}>
-                <boxGeometry args={[0.24, 0.04, 0.02]} />
+              {/* Glasses rim around eyes */}
+              <mesh position={[0, -0.02, 0.22]}>
+                <boxGeometry args={[0.28, 0.05, 0.02]} />
                 <meshStandardMaterial color="#38bdf8" />
               </mesh>
             </group>
           ) : member.role === 'backend' ? (
-            // Backend Emerald Hoodie Cap pulled back
-            <group position={[0, 0.06, -0.04]}>
+            // Backend Hoodie
+            <group position={[0, 0.08, -0.04]}>
               <mesh>
-                <sphereGeometry args={[0.19, 18, 18]} />
-                <meshStandardMaterial color="#047857" roughness={0.8} />
+                <sphereGeometry args={[0.21, 18, 18]} />
+                <meshStandardMaterial color="#047857" roughness={0.7} />
               </mesh>
             </group>
           ) : (
-            // Lead PM Slick Dark Slate Hair
-            <mesh position={[0, 0.12, -0.02]}>
-              <sphereGeometry args={[0.18, 18, 18]} />
+            // Lead PM Slick Hair
+            <mesh position={[0, 0.14, -0.02]}>
+              <sphereGeometry args={[0.20, 18, 18]} />
               <meshStandardMaterial color="#1e293b" roughness={0.3} />
             </mesh>
           )}
         </group>
 
-        {/* Procedural Typing Arms on Desk (reaching forward into keyboard at +Z) */}
+        {/* Arms */}
         <mesh ref={leftHandRef} position={[-0.24, 0.15, 0.28]} rotation={[0.4, 0, 0]}>
           <boxGeometry args={[0.09, 0.09, 0.32]} />
           <meshStandardMaterial color={suitColor} />
@@ -464,10 +465,10 @@ export default function Office3DCanvas({ squad, activeHandshake }: Office3DCanva
         <color attach="background" args={['#070b14']} />
         
         {/* Ambient & Directional Office Lighting */}
-        <ambientLight intensity={0.8} />
+        <ambientLight intensity={0.9} />
         <directionalLight
           position={[6, 9, 5]}
-          intensity={1.5}
+          intensity={1.6}
           castShadow
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
