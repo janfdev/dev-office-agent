@@ -15,14 +15,22 @@ interface Office3DCanvasProps {
   };
 }
 
-// 3D Workstation with Desk, Chair, Monitors, and Stylized 3D Character
+// 3D Workstation with Desk, Chair, Animated Laptop, Coffee Cup, and State-Driven Character
 function Workstation3D({ member }: { member: SquadMember }) {
   const [x, y, z] = member.position3D;
   const isWorking = member.state === 'WORKING' || member.state === 'TESTING';
   const isThinking = member.state === 'THINKING';
   const isError = member.state === 'ERROR';
+  const isIdle = member.state === 'IDLE';
 
-  // State color
+  // Refs for zero-rerender procedural 60fps animations
+  const leftHandRef = useRef<THREE.Mesh>(null);
+  const rightHandRef = useRef<THREE.Mesh>(null);
+  const coffeeArmRef = useRef<THREE.Group>(null);
+  const laptopScreenRef = useRef<THREE.Mesh>(null);
+  const laptopScreenLightRef = useRef<THREE.PointLight>(null);
+
+  // Status indicator colors
   const statusColor = isError 
     ? '#f43f5e' 
     : isWorking 
@@ -31,13 +39,83 @@ function Workstation3D({ member }: { member: SquadMember }) {
     ? '#f59e0b' 
     : '#10b981';
 
-  // Clothing color mapping
+  // Custom clothes & outfit palette
   const suitColor = {
     pm: '#0284c7',       // Navy Blazer
     backend: '#059669',  // Tech Emerald Hoodie
     frontend: '#db2777', // Rose Coral Jacket
     qa: '#7c3aed',       // Violet Lab Vest
   }[member.role];
+
+  // Specific role laptop screen colors
+  const roleScreenGlow = {
+    pm: '#38bdf8',       // Specs & Project Blueprint
+    backend: '#10b981',  // Terminal & Database Matrix
+    frontend: '#f43f5e', // UI Component Canvas
+    qa: '#a855f7',       // Playwright Runner Purple
+  }[member.role];
+
+  // Procedural Animation Loop: Typing on Laptop when WORKING, Sipping Coffee when IDLE
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+
+    if (isWorking) {
+      // 1. ACTIVE WORKING: Typing on Laptop Keyboard
+      const typingSpeed = 16;
+      if (leftHandRef.current && rightHandRef.current) {
+        leftHandRef.current.position.y = 0.15 + Math.sin(time * typingSpeed) * 0.025;
+        leftHandRef.current.position.z = 0.22 + Math.cos(time * typingSpeed * 0.5) * 0.015;
+        rightHandRef.current.position.y = 0.15 + Math.cos(time * typingSpeed + 1.5) * 0.025;
+        rightHandRef.current.position.z = 0.22 + Math.sin(time * typingSpeed * 0.5) * 0.015;
+      }
+      // Laptop Screen Glowing Pulsing with Active Code Execution
+      if (laptopScreenRef.current && laptopScreenLightRef.current) {
+        const pulse = 0.9 + Math.sin(time * 8) * 0.25;
+        (laptopScreenRef.current.material as THREE.MeshBasicMaterial).color.set(roleScreenGlow);
+        laptopScreenLightRef.current.intensity = pulse * 1.5;
+      }
+      // Rest coffee cup on the desk
+      if (coffeeArmRef.current) {
+        coffeeArmRef.current.position.set(0.42, 0.49, 0.15);
+        coffeeArmRef.current.rotation.set(0, 0, 0);
+      }
+    } else if (isIdle) {
+      // 2. IDLE: Relaxing, Hands relaxed, Sipping Coffee Mug periodically
+      if (leftHandRef.current && rightHandRef.current) {
+        leftHandRef.current.position.set(-0.24, 0.08, 0.05);
+        rightHandRef.current.position.set(0.24, 0.08, 0.05);
+      }
+      // Laptop Screen Dimmed / Sleep mode
+      if (laptopScreenRef.current && laptopScreenLightRef.current) {
+        (laptopScreenRef.current.material as THREE.MeshBasicMaterial).color.set('#1e293b');
+        laptopScreenLightRef.current.intensity = 0.08;
+      }
+      // Gentle rhythmic coffee sipping motion (every 4 seconds)
+      if (coffeeArmRef.current) {
+        const sipCycle = Math.sin(time * 1.8);
+        if (sipCycle > 0.3) {
+          // Bring cup near the face
+          const lift = (sipCycle - 0.3) * 0.45;
+          coffeeArmRef.current.position.set(0.18, 0.82 + lift * 0.2, -0.22);
+          coffeeArmRef.current.rotation.set(-0.35, 0.2, -0.2);
+        } else {
+          // Rest cup calmly on the side of desk
+          coffeeArmRef.current.position.set(0.45, 0.49, 0.15);
+          coffeeArmRef.current.rotation.set(0, 0, 0);
+        }
+      }
+    } else {
+      // THINKING / PLANNING: Hand on chin
+      if (leftHandRef.current && rightHandRef.current) {
+        leftHandRef.current.position.set(-0.2, 0.12, 0.1);
+        rightHandRef.current.position.set(0.12, 0.52, -0.2);
+      }
+      if (coffeeArmRef.current) {
+        coffeeArmRef.current.position.set(0.45, 0.49, 0.15);
+        coffeeArmRef.current.rotation.set(0, 0, 0);
+      }
+    }
+  });
 
   return (
     <group position={[x, y, z]}>
@@ -64,28 +142,74 @@ function Workstation3D({ member }: { member: SquadMember }) {
         <meshStandardMaterial color="#64748b" metalness={0.8} />
       </mesh>
 
-      {/* 2. Dual Monitors on Desk */}
-      <mesh position={[-0.3, 0.75, 0.1]} rotation={[0, 0.15, 0]}>
-        <boxGeometry args={[0.55, 0.35, 0.03]} />
-        <meshStandardMaterial color="#0f172a" />
-      </mesh>
-      {/* Glowing screen */}
-      <mesh position={[-0.3, 0.75, 0.12]} rotation={[0, 0.15, 0]}>
-        <planeGeometry args={[0.5, 0.3]} />
-        <meshBasicMaterial color={statusColor} />
-      </mesh>
+      {/* 2. Sleek 3D Laptop with Open Screen & Glowing Display */}
+      <group position={[0, 0.49, 0.05]}>
+        {/* Laptop Base & Keyboard */}
+        <mesh position={[0, 0.01, 0.05]}>
+          <boxGeometry args={[0.42, 0.015, 0.3]} />
+          <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.2} />
+        </mesh>
+        {/* Trackpad */}
+        <mesh position={[0, 0.018, 0.12]}>
+          <boxGeometry args={[0.12, 0.002, 0.08]} />
+          <meshStandardMaterial color="#1e293b" />
+        </mesh>
+        {/* Keyboard keys area */}
+        <mesh position={[0, 0.018, 0.01]}>
+          <boxGeometry args={[0.36, 0.002, 0.12]} />
+          <meshStandardMaterial color="#0f172a" />
+        </mesh>
 
-      <mesh position={[0.3, 0.75, 0.1]} rotation={[0, -0.15, 0]}>
-        <boxGeometry args={[0.55, 0.35, 0.03]} />
-        <meshStandardMaterial color="#0f172a" />
-      </mesh>
-      {/* Glowing screen 2 */}
-      <mesh position={[0.3, 0.75, 0.12]} rotation={[0, -0.15, 0]}>
-        <planeGeometry args={[0.5, 0.3]} />
-        <meshBasicMaterial color="#38bdf8" />
-      </mesh>
+        {/* Laptop Screen (Open at 105 degrees) */}
+        <group position={[0, 0.02, -0.1]} rotation={[-0.25, 0, 0]}>
+          {/* Lid */}
+          <mesh position={[0, 0.14, 0]}>
+            <boxGeometry args={[0.42, 0.28, 0.012]} />
+            <meshStandardMaterial color="#1e293b" metalness={0.7} />
+          </mesh>
+          {/* Display Matrix (Dynamic Glow on Work, Dim on Idle) */}
+          <mesh ref={laptopScreenRef} position={[0, 0.14, 0.008]}>
+            <planeGeometry args={[0.39, 0.25]} />
+            <meshBasicMaterial color={isWorking ? roleScreenGlow : '#0f172a'} />
+          </mesh>
+          {/* Screen Light illuminating Agent face */}
+          <pointLight
+            ref={laptopScreenLightRef}
+            position={[0, 0.15, 0.15]}
+            color={roleScreenGlow}
+            intensity={isWorking ? 1.5 : 0.1}
+            distance={1.2}
+          />
+        </group>
+      </group>
 
-      {/* 3. Ergonomic Office Chair */}
+      {/* 3. Steaming Coffee Mug (Interactive Coffee Break / Sipping Animation) */}
+      <group ref={coffeeArmRef} position={[0.45, 0.49, 0.15]}>
+        {/* Coffee Mug Ceramic Body */}
+        <mesh position={[0, 0.06, 0]}>
+          <cylinderGeometry args={[0.045, 0.04, 0.1, 16]} />
+          <meshStandardMaterial color={isIdle ? '#f59e0b' : '#94a3b8'} roughness={0.2} />
+        </mesh>
+        {/* Hot Black Coffee inside */}
+        <mesh position={[0, 0.105, 0]}>
+          <cylinderGeometry args={[0.04, 0.04, 0.005, 16]} />
+          <meshStandardMaterial color="#3f271d" roughness={0.1} />
+        </mesh>
+        {/* Handle */}
+        <mesh position={[0.055, 0.06, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <torusGeometry args={[0.025, 0.008, 8, 16]} />
+          <meshStandardMaterial color="#cbd5e1" />
+        </mesh>
+        {/* Gentle Steam Indicator when Idle */}
+        {isIdle && (
+          <mesh position={[0, 0.15, 0]}>
+            <sphereGeometry args={[0.02, 8, 8]} />
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.4} />
+          </mesh>
+        )}
+      </group>
+
+      {/* 4. Ergonomic Office Chair */}
       <mesh position={[0, 0.35, -0.45]}>
         <boxGeometry args={[0.5, 0.06, 0.5]} />
         <meshStandardMaterial color="#0f172a" />
@@ -99,27 +223,40 @@ function Workstation3D({ member }: { member: SquadMember }) {
         <meshStandardMaterial color="#475569" metalness={0.9} />
       </mesh>
 
-      {/* 4. Stylized 3D Character Sitting on Chair */}
+      {/* 5. Stylized 3D Character Sitting on Chair */}
       <group position={[0, 0.55, -0.42]}>
-        {/* Torso with Customized Outfit */}
-        <mesh position={[0, 0.25, 0]}>
+        {/* Torso with Customized Role Outfit */}
+        <mesh position={[0, 0.25, 0]} rotation={[isWorking ? 0.12 : -0.05, 0, 0]}>
           <boxGeometry args={[0.42, 0.45, 0.28]} />
           <meshStandardMaterial color={suitColor} roughness={0.6} />
         </mesh>
 
         {/* Head */}
-        <mesh position={[0, 0.62, 0]}>
+        <mesh position={[0, 0.62, isWorking ? 0.05 : 0]}>
           <sphereGeometry args={[0.18, 20, 20]} />
           <meshStandardMaterial color="#fed7aa" roughness={0.5} />
         </mesh>
 
-        {/* Hair/Cap/Headset */}
+        {/* Hair/Headset/Glasses Accents */}
         {member.role === 'qa' ? (
           // QA Headset
           <group position={[0, 0.64, 0]}>
             <mesh>
               <torusGeometry args={[0.19, 0.03, 10, 20, Math.PI]} />
               <meshStandardMaterial color="#c084fc" />
+            </mesh>
+          </group>
+        ) : member.role === 'frontend' ? (
+          // Frontend Modern Hair & Spectacles
+          <group position={[0, 0.65, 0]}>
+            <mesh position={[0, 0.1, -0.02]}>
+              <sphereGeometry args={[0.18, 16, 16]} />
+              <meshStandardMaterial color="#be185d" />
+            </mesh>
+            {/* Stylish Glasses */}
+            <mesh position={[0, -0.02, 0.18]}>
+              <boxGeometry args={[0.22, 0.04, 0.02]} />
+              <meshStandardMaterial color="#38bdf8" />
             </mesh>
           </group>
         ) : (
@@ -129,21 +266,21 @@ function Workstation3D({ member }: { member: SquadMember }) {
           </mesh>
         )}
 
-        {/* Arms on Desk (Typing stance) */}
-        <mesh position={[-0.26, 0.15, 0.22]} rotation={[0.4, 0, 0]}>
-          <boxGeometry args={[0.1, 0.1, 0.32]} />
+        {/* Procedural Typing Arms on Desk */}
+        <mesh ref={leftHandRef} position={[-0.24, 0.15, 0.22]} rotation={[0.4, 0, 0]}>
+          <boxGeometry args={[0.09, 0.09, 0.28]} />
           <meshStandardMaterial color={suitColor} />
         </mesh>
-        <mesh position={[0.26, 0.15, 0.22]} rotation={[0.4, 0, 0]}>
-          <boxGeometry args={[0.1, 0.1, 0.32]} />
+        <mesh ref={rightHandRef} position={[0.24, 0.15, 0.22]} rotation={[0.4, 0, 0]}>
+          <boxGeometry args={[0.09, 0.09, 0.28]} />
           <meshStandardMaterial color={suitColor} />
         </mesh>
 
         {/* Status Point Light above character */}
-        <pointLight position={[0, 1.1, 0]} color={statusColor} intensity={2.5} distance={2.5} />
+        <pointLight position={[0, 1.1, 0]} color={statusColor} intensity={2.2} distance={2.5} />
       </group>
 
-      {/* 5. 3D Floating Name & Status Badge Tag (HTML Overlay) */}
+      {/* 6. 3D Floating Name & Live Behavior Tag (HTML Overlay) */}
       <Html position={[0, 1.75, 0]} center distanceFactor={8}>
         <div className="flex flex-col items-center pointer-events-none select-none">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-950/90 border border-border shadow-xl backdrop-blur-md">
@@ -157,11 +294,11 @@ function Workstation3D({ member }: { member: SquadMember }) {
               {member.name}
             </span>
             <span className="text-[9px] font-mono uppercase text-cyan-400 border-l border-slate-700 pl-1.5">
-              {member.state}
+              {isWorking ? '💻 TYPING' : isIdle ? '☕ COFFEE' : member.state}
             </span>
           </div>
           <div className="text-[9px] text-slate-400 font-mono bg-slate-900/80 px-2 py-0.5 rounded-md mt-1 border border-slate-800">
-            {member.clothing}
+            {isWorking ? `Job: ${member.currentTask || 'Executing code'}` : 'Taking coffee break'}
           </div>
         </div>
       </Html>
@@ -171,8 +308,6 @@ function Workstation3D({ member }: { member: SquadMember }) {
 
 // Data Transmission Beam between two agents in 3D
 function HandshakeBeam({ from, to }: { from: [number, number, number]; to: [number, number, number] }) {
-  const lineRef = useRef<THREE.Line>(null);
-
   const points = React.useMemo(() => {
     const start = new THREE.Vector3(from[0], from[1] + 1.2, from[2]);
     const end = new THREE.Vector3(to[0], to[1] + 1.2, to[2]);
@@ -201,7 +336,6 @@ export default function Office3DCanvas({ squad, activeHandshake }: Office3DCanva
 
   return (
     <div className="w-full h-[420px] sm:h-[480px] rounded-2xl overflow-hidden bg-slate-950 border border-cyan-950/40 relative shadow-2xl">
-      
       {/* Header Overlay */}
       <div className="absolute top-3 left-4 z-10 flex items-center gap-2 pointer-events-none">
         <span className="size-2 rounded-full bg-cyan-400 animate-pulse" />
