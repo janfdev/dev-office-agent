@@ -23,6 +23,17 @@ function Workstation3D({ member }: { member: SquadMember }) {
   const isError = member.state === 'ERROR';
   const isIdle = member.state === 'IDLE';
 
+  // Determine workstation rotation based on role so each character faces center / camera:
+  // Ken (center back, z = -2.4): rotation = 0 (faces +Z towards camera)
+  // Maya (center front, z = 2.2): rotation = PI (faces -Z towards center/office)
+  // Alex (left, x = -2.6): rotation = PI/2 (faces +X towards center)
+  // Elena (right, x = 2.6): rotation = -PI/2 (faces -X towards center)
+  const workstationRotation: [number, number, number] = 
+    member.role === 'pm' ? [0, 0, 0] :
+    member.role === 'qa' ? [0, Math.PI, 0] :
+    member.role === 'backend' ? [0, Math.PI / 2, 0] :
+    [0, -Math.PI / 2, 0];
+
   // Refs for zero-rerender procedural 60fps animations
   const leftHandRef = useRef<THREE.Mesh>(null);
   const rightHandRef = useRef<THREE.Mesh>(null);
@@ -118,7 +129,7 @@ function Workstation3D({ member }: { member: SquadMember }) {
   });
 
   return (
-    <group position={[x, y, z]}>
+    <group position={[x, y, z]} rotation={workstationRotation}>
       {/* 1. Office Desk */}
       <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
         <boxGeometry args={[1.5, 0.08, 0.9]} />
@@ -142,7 +153,12 @@ function Workstation3D({ member }: { member: SquadMember }) {
         <meshStandardMaterial color="#64748b" metalness={0.8} />
       </mesh>
 
-      {/* 2. Sleek 3D Laptop Facing Character */}
+      {/* 2. Sleek 3D Laptop Facing Character 
+             Desk front: +z. Chair and character: -z.
+             Laptop Base is near user at z = -0.1.
+             Laptop Screen Hinge at z = 0.03, Screen tilts back towards +z by 20 deg,
+             with Display facing the character (-z direction).
+      */}
       <group position={[0, 0.49, -0.08]}>
         {/* Laptop Base & Keyboard */}
         <mesh position={[0, 0.01, -0.1]}>
@@ -160,7 +176,7 @@ function Workstation3D({ member }: { member: SquadMember }) {
           <meshStandardMaterial color="#0f172a" />
         </mesh>
 
-        {/* Laptop Screen (Hinge at z = 0.03, Screen tilts back towards +z) */}
+        {/* Laptop Screen */}
         <group position={[0, 0.02, 0.03]} rotation={[0.32, 0, 0]}>
           {/* Outer Lid */}
           <mesh position={[0, 0.14, 0.006]}>
@@ -183,7 +199,7 @@ function Workstation3D({ member }: { member: SquadMember }) {
         </group>
       </group>
 
-      {/* 3. Steaming Coffee Mug (Interactive Coffee Break / Sipping Animation) */}
+      {/* 3. Steaming Coffee Mug */}
       <group ref={coffeeArmRef} position={[0.48, 0.49, 0.15]}>
         <mesh position={[0, 0.06, 0]}>
           <cylinderGeometry args={[0.05, 0.042, 0.1, 16]} />
@@ -225,7 +241,7 @@ function Workstation3D({ member }: { member: SquadMember }) {
         <meshStandardMaterial color="#475569" metalness={0.9} />
       </mesh>
 
-      {/* 5. Expressive 3D Human Character with Prominent Big Eyes, Pupils, Brows, Smile */}
+      {/* 5. Expressive 3D Human Character Sitting on Chair */}
       <group position={[0, 0.55, -0.42]}>
         {/* Torso */}
         <mesh position={[0, 0.25, 0]} rotation={[isWorking ? 0.12 : -0.05, 0, 0]}>
@@ -458,22 +474,22 @@ export default function Office3DCanvas({ squad, activeHandshake }: Office3DCanva
       </div>
 
       <Canvas
-        camera={{ position: [5, 5.5, 6], fov: 42 }}
+        camera={{ position: [0, 4.5, 6.5], fov: 45 }}
         shadows
         className="w-full h-full cursor-grab active:cursor-grabbing"
       >
         <color attach="background" args={['#070b14']} />
         
         {/* Ambient & Directional Office Lighting */}
-        <ambientLight intensity={0.9} />
+        <ambientLight intensity={1.1} />
         <directionalLight
-          position={[6, 9, 5]}
-          intensity={1.6}
+          position={[4, 8, 5]}
+          intensity={1.8}
           castShadow
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
         />
-        <pointLight position={[0, 4, 0]} intensity={1.2} color="#38bdf8" distance={10} />
+        <pointLight position={[0, 4, 0]} intensity={1.5} color="#38bdf8" distance={10} />
 
         {/* 3D Office Floor with Grid lines */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
@@ -505,7 +521,7 @@ export default function Office3DCanvas({ squad, activeHandshake }: Office3DCanva
         {/* Smooth Orbit Camera Controls */}
         <OrbitControls
           enablePan={false}
-          minDistance={4}
+          minDistance={3}
           maxDistance={12}
           maxPolarAngle={Math.PI / 2.1} // Prevent going below floor
         />
